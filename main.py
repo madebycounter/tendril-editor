@@ -63,6 +63,9 @@ try:
                 if event.key == K_LALT or event.key == K_RALT:
                     selecting = True
 
+                if event.key == K_F12 and pygame.key.get_mods() & KMOD_CTRL:
+                    1 / 0
+
                 if event.key == K_s and pygame.key.get_mods() & KMOD_CTRL:
                     if save_file == "":
                         fp = load.prompt_vein(save=True)
@@ -168,6 +171,7 @@ except Exception as e:
             },
             "viewer": {
                 "zoom": viewer._zoom,
+                "zoom_level": viewer._zoom_level,
                 "posn": viewer._posn,
                 "pan_active": viewer.pan_active,
                 "pan_origin": viewer.pan_origin,
