@@ -16,11 +16,12 @@ scaled_cache = {}
 def draw_viewer(screen, image, viewer):
     screen.fill(BACKGROUND_COLOR)
 
-    if viewer._zoom in scaled_cache:
-        scaled_image = scaled_cache[viewer._zoom]
+    z_rounded = round(viewer._zoom, 2)
+    if z_rounded in scaled_cache:
+        scaled_image = scaled_cache[z_rounded]
     else:
         scaled_image = viewer.resize_image(image)
-        scaled_cache[viewer._zoom] = scaled_image
+        scaled_cache[z_rounded] = scaled_image
 
     screen.blit(scaled_image, viewer.translate((0, 0)))
 
@@ -94,6 +95,14 @@ def draw_ui(screen, editor, veins, current, save_file):
         (255, 255, 255),
     )
 
+    cache_status = f"cache {len(scaled_cache)} zoom {editor.viewer._zoom_level} ({round(editor.viewer._zoom, 2)}x)"
+
+    cache_text = font.render(
+        cache_status,
+        True,
+        (255, 255, 255),
+    )
+
     # blit the text to the screen underneath one another
     pygame.draw.rect(
         screen,
@@ -101,3 +110,21 @@ def draw_ui(screen, editor, veins, current, save_file):
         (0, text.get_height(), status_text.get_width(), status_text.get_height()),
     )
     screen.blit(status_text, (0, text.get_height()))
+
+    pygame.draw.rect(
+        screen,
+        (0, 0, 0),
+        (
+            0,
+            text.get_height() + status_text.get_height(),
+            cache_text.get_width(),
+            cache_text.get_height(),
+        ),
+    )
+    screen.blit(
+        cache_text,
+        (
+            0,
+            text.get_height() + status_text.get_height(),
+        ),
+    )

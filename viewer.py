@@ -2,28 +2,52 @@ import pygame
 from pygame.locals import *
 
 
+def calculate_zoom(level, speed):
+    return (1 + speed) ** level
+
+
 class Viewer:
     PAN_BUTTON = 2
     ZOOM_IN_BUTTON = 4
     ZOOM_OUT_BUTTON = 5
     ZOOM_SPEED = 0.1
+    MAX_ZOOM = 10
+    MIN_ZOOM = 0.1
 
     def __init__(self, screen):
         self.screen = screen
         self._posn = (0, 0)
-        self._zoom = 1.0
+        self._zoom_level = 0
+        self._zoom = calculate_zoom(self._zoom_level, Viewer.ZOOM_SPEED)
 
         self.pan_active = False
         self.pan_origin = (0, 0)
         self.mouse_posn = (0, 0)
 
-    def zoom(self, delta):
-        amount = delta * self._zoom
+    def zoom_in(self):
+        self._zoom_level += 1
+        new = calculate_zoom(self._zoom_level, Viewer.ZOOM_SPEED)
 
-        if self._zoom + amount < 0.1 or self._zoom + amount > 10:
+        if new > Viewer.MAX_ZOOM:
+            self._zoom_level -= 1
             return
 
-        self._zoom += amount
+        self.zoom(new)
+
+    def zoom_out(self):
+        self._zoom_level -= 1
+        new = calculate_zoom(self._zoom_level, Viewer.ZOOM_SPEED)
+
+        if new < Viewer.MIN_ZOOM:
+            self._zoom_level += 1
+            return
+
+        self.zoom(new)
+
+    def zoom(self, new):
+        amount = new - self._zoom
+
+        self._zoom = new
 
         dx = self.mouse_posn[0] * amount
         dy = self.mouse_posn[1] * amount
@@ -37,10 +61,10 @@ class Viewer:
                 self.pan_active = True
 
             if event.button == Viewer.ZOOM_IN_BUTTON:
-                self.zoom(Viewer.ZOOM_SPEED)
+                self.zoom_in()
 
             if event.button == Viewer.ZOOM_OUT_BUTTON:
-                self.zoom(-Viewer.ZOOM_SPEED)
+                self.zoom_out()
 
         if event.type == MOUSEMOTION:
             self.mouse_posn = self.screen_to_world(event.pos)
