@@ -21,7 +21,9 @@ def draw_viewer(screen, image, viewer):
         scaled_image = scaled_cache[z_rounded]
     else:
         scaled_image = viewer.resize_image(image)
-        scaled_cache[z_rounded] = scaled_image
+
+        if z_rounded > 1:
+            scaled_cache[z_rounded] = scaled_image
 
     screen.blit(scaled_image, viewer.translate((0, 0)))
 
