@@ -84,6 +84,13 @@ class Editor:
         self.points = points
         self.previous = []
 
+        self.drag_active = False
+        self.drag_idx = 0
+        self.drag_frames = 0
+
+        self.active_point = None
+        self.active_line = None
+
     def create_savepoint(self):
         if len(self.previous) and self.previous[-1] == self.points:
             return
