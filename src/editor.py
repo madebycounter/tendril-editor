@@ -106,6 +106,8 @@ class Editor:
             if event.key == K_BACKSPACE:
                 if len(self.points) > 0:
                     self.points.pop()
+                    self.active_point = None
+                    self.active_line = None
 
             if event.key == pygame.K_z and pygame.key.get_mods() & pygame.KMOD_CTRL:
                 if len(self.previous) > 0:
