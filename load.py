@@ -42,26 +42,36 @@ def load_image():
 
 
 def load_vein(path):
-    vein = []
+    veins = []
 
     with open(path, "r") as f:
-        raw = f.read().split(",")
+        raw = f.read().split("\n")
 
-    if len(raw) % 2 != 0:
-        raise Exception("Invalid vein file")
+    for vein in raw:
+        if len(vein) == 0:
+            continue
 
-    for i in range(0, len(raw), 2):
-        vein.append((float(raw[i]), float(raw[i + 1])))
+        this = []
+        split = vein.split(",")
+        if len(split) % 2 != 0:
+            raise Exception("Invalid vein file")
 
-    return vein
+        for i in range(0, len(split), 2):
+            this.append((float(split[i]), float(split[i + 1])))
+
+        veins.append(this)
+
+    return veins
 
 
-def save_vein(vein, path):
+def save_vein(veins, path):
     if not path.endswith(".vein"):
         path += ".vein"
 
     with open(path, "w") as f:
-        for idx, point in enumerate(vein):
-            f.write(f"{point[0]},{point[1]}")
-            if idx < len(vein) - 1:
-                f.write(",")
+        for vein in veins:
+            for idx, point in enumerate(vein):
+                f.write(f"{point[0]},{point[1]}")
+                if idx < len(vein) - 1:
+                    f.write(",")
+            f.write("\n")
