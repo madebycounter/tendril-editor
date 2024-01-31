@@ -15,6 +15,19 @@ import draw
 import load
 
 
+from tkinter import messagebox as mb
+
+
+def save_on_exit():
+    res = mb.askquestion(
+        "Exit Application", "You have unsaved changes, save before exiting?"
+    )
+    if res == "yes":
+        return True
+    else:
+        return False
+
+
 pygame.init()
 pygame.display.set_caption("William's Veiny Tendril Editor")
 
@@ -56,6 +69,21 @@ try:
             viewer.event(event)
 
             if event.type == QUIT:
+                should_save = save_on_exit()
+
+                if should_save:
+                    if save_file == "":
+                        fp = load.prompt_vein(save=True)
+                        if fp is None:
+                            continue
+                        else:
+                            save_file = fp
+
+                    veins[current] = editor.points
+                    load.save_vein(veins, save_file)
+
+                print("Program exited without a crash. Woohoo!")
+
                 pygame.quit()
                 sys.exit()
 
@@ -161,6 +189,7 @@ except Exception as e:
             "points": editor.points,
             "current": current,
             "save_file": save_file,
+            "selecting": selecting,
             "editor": {
                 "drag_active": editor.drag_active,
                 "drag_idx": editor.drag_idx,
