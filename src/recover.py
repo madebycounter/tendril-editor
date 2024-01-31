@@ -17,6 +17,10 @@ for file in files:
 for idx, crash in enumerate(found_crashes):
     print(f"{idx + 1}. {crash}")
 
+if len(found_crashes) == 0:
+    print("No crashes found.")
+    exit()
+
 choice = int(input("Choose a crash to recover: ")) - 1
 crash_name = list(found_crashes)[choice]
 
