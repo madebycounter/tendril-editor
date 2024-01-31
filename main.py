@@ -79,29 +79,23 @@ while True:
                     current = 0
 
             if event.key == K_n and pygame.key.get_mods() & KMOD_CTRL:
-                veins[current] = editor.points
-                veins.append([])
-                current = len(veins) - 1
-                editor.set_points(veins[current])
+                if len(veins[current]) > 0:
+                    veins[current] = editor.points
+                    veins.append([])
+                    current = len(veins) - 1
+                    editor.set_points(veins[current])
 
         if event.type == MOUSEBUTTONUP:
             if selecting:
-                mouse = viewer.translate(viewer.mouse_posn)
+                closest = select_closest_vein()
 
-                for cur, vein in enumerate(veins):
-                    for idx, point in enumerate(vein):
-                        if idx == 0:
-                            continue
+                if closest is not None:
+                    veins[current] = editor.points
 
-                        point1 = viewer.translate(point)
-                        point2 = viewer.translate(vein[idx - 1])
-                        if distance_to_line(point1, point2, mouse) < 10:
-                            veins[current] = editor.points
-                            current = cur
-                            editor.set_points(veins[current])
-                            selecting = False
-                            break
-                continue
+                    current = closest
+                    editor.set_points(veins[current])
+                    selecting = False
+                    continue
 
         if event.type == KEYUP:
             if event.key == K_LALT or event.key == K_RALT:
