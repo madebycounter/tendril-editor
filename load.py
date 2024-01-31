@@ -1,3 +1,7 @@
+import os
+
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
+
 import pygame
 import tkinter as tk
 from tkinter import filedialog
