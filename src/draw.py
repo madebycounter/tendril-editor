@@ -79,13 +79,14 @@ def draw_selected_vein(screen, editor, points):
 
 
 def draw_ui(screen, editor, veins, current, save_file, fps):
+    fname = "untitled.vein"
     if save_file:
-        if editor.modified:
-            text = font.render(f"{save_file}*", True, (255, 255, 255))
-        else:
-            text = font.render(f"{save_file}", True, (255, 255, 255))
+        fname = save_file
+
+    if editor.modified:
+        text = font.render(f"{fname}*", True, (255, 255, 255))
     else:
-        text = font.render("untitled.vein*", True, (255, 255, 255))
+        text = font.render(f"{fname}", True, (255, 255, 255))
 
     pygame.draw.rect(screen, (0, 0, 0), (0, 0, text.get_width(), text.get_height()))
     screen.blit(text, (0, 0))

@@ -69,13 +69,16 @@ try:
             viewer.event(event)
 
             if event.type == QUIT:
-                should_save = save_on_exit()
+                should_save = False
+
+                if editor.modified:
+                    should_save = save_on_exit()
 
                 if should_save:
                     if save_file == "":
                         fp = load.prompt_vein(save=True)
                         if fp is None:
-                            continue
+                            should_exit = False
                         else:
                             save_file = fp
 
@@ -83,7 +86,6 @@ try:
                     load.save_vein(veins, save_file)
 
                 print("Program exited without a crash. Woohoo!")
-
                 pygame.quit()
                 sys.exit()
 

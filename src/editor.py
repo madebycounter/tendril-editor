@@ -115,10 +115,10 @@ class Editor:
 
         if event.type == MOUSEBUTTONDOWN:
             if event.button == 1:
-                self.create_savepoint()
                 idx = self.nearest_point()
 
                 if idx is not None:
+                    self.create_savepoint()
                     self.drag_active = True
                     self.drag_idx = idx
                     self.drag_frames = 0
