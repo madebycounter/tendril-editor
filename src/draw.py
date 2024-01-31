@@ -76,7 +76,7 @@ def draw_selected_vein(screen, editor, points):
         )
 
 
-def draw_ui(screen, editor, veins, current, save_file):
+def draw_ui(screen, editor, veins, current, save_file, fps):
     if save_file:
         if editor.modified:
             text = font.render(f"{save_file}*", True, (255, 255, 255))
@@ -95,7 +95,7 @@ def draw_ui(screen, editor, veins, current, save_file):
         (255, 255, 255),
     )
 
-    cache_status = f"cache {len(scaled_cache)} zoom {editor.viewer._zoom_level} ({round(editor.viewer._zoom, 2)}x)"
+    cache_status = f"cache {len(scaled_cache)} zoom {editor.viewer._zoom_level} ({round(editor.viewer._zoom, 2)}x) {round(fps)} fps"
 
     cache_text = font.render(
         cache_status,

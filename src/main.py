@@ -162,7 +162,7 @@ try:
                 else:
                     draw.draw_vein(screen, editor, vein)
 
-        draw.draw_ui(screen, editor, veins, current, save_file)
+        draw.draw_ui(screen, editor, veins, current, save_file, clock.get_fps())
 
         editor.update()
 
