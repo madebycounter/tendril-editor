@@ -1,3 +1,3 @@
 @echo off
 
-python editor.py
+python main.py
