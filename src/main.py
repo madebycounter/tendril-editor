@@ -29,6 +29,7 @@ ms = 0
 
 font = pygame.font.SysFont("Comic Sans MS", 16)
 active_file = ""
+show_help = True
 
 
 def save_check():
@@ -49,7 +50,7 @@ def save():
 
 
 def main():
-    global editor, viewer, active_file
+    global editor, viewer, active_file, show_help
 
     while True:
         for event in pygame.event.get():
@@ -69,7 +70,7 @@ def main():
                 if event.key == K_o and pygame.key.get_mods() & KMOD_CTRL:
                     load_file = prompt_vein()
 
-                    if load_file is not None:
+                    if load_file:
                         active_file = load_file
                         editor = Editor(viewer, load_vein(load_file))
 
@@ -78,15 +79,26 @@ def main():
 
                 if event.key == K_i and pygame.key.get_mods() & KMOD_CTRL:
                     load_image = prompt_image()
-                    if load_image is not None:
+                    if load_image:
                         viewer = ImageViewer(pygame.image.load(load_image))
                         editor.viewer = viewer
+
+                if event.key == K_h:
+                    show_help = not show_help
 
         screen.fill((0, 0, 0))
         viewer.draw(screen)
         editor.draw(screen)
 
-        draw_hud(screen, font, active_file, editor, viewer, int(clock.get_fps()))
+        draw_hud(
+            screen,
+            font,
+            active_file,
+            editor,
+            viewer,
+            int(clock.get_fps()),
+            show_help=show_help,
+        )
 
         pygame.display.flip()
 
