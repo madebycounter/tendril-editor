@@ -6,8 +6,6 @@ import sys
 import pygame
 import traceback
 import datetime
-import pickle
-import base64
 from pygame.locals import *
 from lib.imageviewer import ImageViewer
 from editor import Editor
