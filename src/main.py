@@ -22,7 +22,7 @@ clock = pygame.time.Clock()
 screen = pygame.display.set_mode(size, RESIZABLE, vsync=True)
 pygame.display.set_caption("William's Veiny Tendril Editor")
 
-image = pygame.image.load("Veins.png")
+image = pygame.image.load("sample.png")
 viewer = ImageViewer(image)
 editor = Editor(viewer)
 ms = 0
