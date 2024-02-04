@@ -30,24 +30,6 @@ class Editor:
 
         self.mouse_posn = Vector(0, 0)
 
-    # oh well
-    def reload(self, tendril):
-        self.tendril = tendril
-        self.active = 0
-
-        self.history = []
-        self.active = 0
-
-        self.modified = False
-
-        self.selecting = False
-        self.drag_active = False
-        self.drag_idx = 0
-        self.drag_time = 0
-
-        self.hovering_point = None
-        self.hovering_line = None
-
     def save(self):
         self.modified = True
         self.history.append([a[:] for a in self.tendril])
