@@ -32,13 +32,13 @@ active_file = ""
 
 
 def save_check():
-    global editor, active_file
+    global active_file
     if editor.modified and save_on_exit():
         save()
 
 
 def save():
-    global editor, active_file
+    global active_file
 
     if active_file == "":
         active_file = prompt_vein(save=True)
@@ -49,7 +49,7 @@ def save():
 
 
 def main():
-    global editor, active_file
+    global editor, viewer, active_file
 
     while True:
         for event in pygame.event.get():
@@ -76,6 +76,12 @@ def main():
                 if event.key == K_s and pygame.key.get_mods() & KMOD_CTRL:
                     save()
 
+                if event.key == K_i and pygame.key.get_mods() & KMOD_CTRL:
+                    load_image = prompt_image()
+                    if load_image is not None:
+                        viewer = ImageViewer(pygame.image.load(load_image))
+                        editor.viewer = viewer
+
         screen.fill((0, 0, 0))
         viewer.draw(screen)
         editor.draw(screen)
@@ -96,7 +102,7 @@ if __name__ == "__main__":
         print(traceback.format_exc())
 
         timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        veins_file = f"crash_{timestamp}"
+        veins_file = f"crash_{timestamp}.vein"
 
         save_vein(editor.tendril, veins_file)
         print(f"Tendril saved to {veins_file}.")
