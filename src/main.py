@@ -31,20 +31,21 @@ show_help = True
 
 
 def save_check():
-    global active_file
     if editor.modified and save_on_exit():
-        save()
+        return save()
+    return True
 
 
 def save():
     global active_file
 
-    if active_file == "":
+    if not active_file:
         active_file = prompt_vein(save=True)
 
-    if active_file is not None:
+    if active_file:
         save_vein(editor.tendril, active_file)
         editor.modified = False
+        return True
 
 
 def main():
@@ -56,14 +57,14 @@ def main():
             editor.event(event)
 
             if event.type == QUIT:
-                save_check()
-                pygame.quit()
-                sys.exit()
+                if save_check():
+                    pygame.quit()
+                    sys.exit()
 
             if event.type == KEYDOWN:
                 if event.key == K_F12 and pygame.key.get_mods() & KMOD_CTRL:
-                    save_check()
-                    1 / 0
+                    if save_check():
+                        1 / 0
 
                 if event.key == K_o and pygame.key.get_mods() & KMOD_CTRL:
                     load_file = prompt_vein()
