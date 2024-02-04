@@ -5,6 +5,18 @@ os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 import pygame
 import tkinter as tk
 from tkinter import filedialog
+from tkinter import messagebox as mb
+from lib.vector import Vector
+
+
+def save_on_exit():
+    res = mb.askquestion(
+        "Exit Application", "You have unsaved changes, save before exiting?"
+    )
+    if res == "yes":
+        return True
+    else:
+        return False
 
 
 def prompt_image():
@@ -61,7 +73,7 @@ def load_vein(path):
             raise Exception("Invalid vein file")
 
         for i in range(0, len(split), 2):
-            this.append((float(split[i]), float(split[i + 1])))
+            this.append(Vector(float(split[i]), float(split[i + 1])))
 
         veins.append(this)
 

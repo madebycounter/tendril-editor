@@ -1,165 +1,254 @@
 import pygame
 from pygame.locals import *
-
-
-def distance_to_line(a, b, c):
-    x1, y1 = a
-    x2, y2 = b
-    x3, y3 = c
-
-    try:
-        m1 = (y2 - y1) / (x2 - x1)
-    except ZeroDivisionError:
-        m1 = 99999
-
-    try:
-        m2 = -1 / m1
-    except ZeroDivisionError:
-        m2 = 99999
-
-    b1 = y1 - m1 * x1
-    b2 = y3 - m2 * x3
-
-    x = (b2 - b1) / (m1 - m2)
-    y = m1 * x + b1
-
-    if x < min(x1, x2) or x > max(x1, x2):
-        return min(distance_between(a, c), distance_between(b, c))
-
-    return distance_between((x, y), c)
-
-
-def distance_between(a, b):
-    return ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5
+from lib.vector import Vector, distance_to_line
+from lib.aadraw import aacircle, aaline
 
 
 class Editor:
-    def __init__(self, viewer):
+    HOVER_RANGE = 5
+    HISTORY_SIZE = 100
+
+    PRIMARY_COLOR = (255, 0, 0)
+    HOVER_COLOR = (0, 0, 255)
+    ALTERNATE_COLOR = (0, 255, 0)
+
+    def __init__(self, viewer, tendril=[[]]):
         self.viewer = viewer
-        self.points = []
-        self.previous = []
+        self.tendril = tendril
+        self.history = []
+        self.active = 0
+
         self.modified = False
 
+        self.selecting = False
         self.drag_active = False
         self.drag_idx = 0
-        self.drag_frames = 0
+        self.drag_time = 0
 
-        self.active_point = None
-        self.active_line = None
+        self.hovering_point = None
+        self.hovering_line = None
 
-    def nearest_point(self, dist=6):
-        mouse = self.viewer.translate(self.viewer.mouse_posn)
+        self.mouse_posn = Vector(0, 0)
 
-        for idx, point in enumerate(self.points):
-            point = self.viewer.translate(point)
+    # oh well
+    def reload(self, tendril):
+        self.tendril = tendril
+        self.active = 0
 
-            if distance_between(mouse, point) < dist:
-                return idx
+        self.history = []
+        self.active = 0
 
-    def nearest_line(self, dist=6):
-        if len(self.points) < 2:
-            return None
+        self.modified = False
 
-        mouse = self.viewer.translate(self.viewer.mouse_posn)
-
-        for i in range(len(self.points) - 1):
-            curr = self.viewer.translate(self.points[i])
-            next = self.viewer.translate(self.points[i + 1])
-
-            if distance_to_line(curr, next, mouse) < dist:
-                return i
-
-    def update(self):
-        if self.drag_active:
-            self.drag_frames += 1
-
-        self.active_point = self.nearest_point()
-
-        if self.active_point is None:
-            self.active_line = self.nearest_line()
-        else:
-            self.active_line = None
-
-    def set_points(self, points):
-        self.points = points
-        self.previous = []
-
+        self.selecting = False
         self.drag_active = False
         self.drag_idx = 0
-        self.drag_frames = 0
+        self.drag_time = 0
 
-        self.active_point = None
-        self.active_line = None
+        self.hovering_point = None
+        self.hovering_line = None
 
-    def create_savepoint(self):
-        if len(self.previous) and self.previous[-1] == self.points:
-            return
-
-        self.previous.append(self.points[:])
+    def save(self):
         self.modified = True
+        self.history.append([a[:] for a in self.tendril])
 
-        if len(self.previous) > 10:
-            self.previous.pop(0)
+        if len(self.history) > Editor.HISTORY_SIZE:
+            self.history.pop(0)
+
+    def undo(self):
+        if len(self.history) > 0:
+            self.modified = True
+            self.tendril = self.history.pop()
+
+    def dragging(self, mouse):
+        return self.drag_active and (
+            self.drag_time > 100
+            or Vector.Distance(
+                self.viewer.screen_to_world(mouse), self.active_vein()[self.drag_idx]
+            )
+            * self.viewer.zoom_scale()
+            > Editor.HOVER_RANGE
+        )
+
+    def active_vein(self):
+        return self.tendril[self.active]
+
+    def nearest_vein(self, posn):
+        for curr, vein in enumerate(self.tendril):
+            for idx in range(1, len(vein)):
+                point1 = vein[idx]
+                point2 = vein[idx - 1]
+
+                if distance_to_line(point1, point2, posn) < Editor.HOVER_RANGE:
+                    return curr
+
+    def nearest_point(self, posn):
+        smallest = 0
+        smallest_dist = 99999999
+
+        for idx, point in enumerate(self.active_vein()):
+            dist = Vector.Distance(posn, point)
+            if dist < smallest_dist:
+                smallest = idx
+                smallest_dist = dist
+
+        return smallest, smallest_dist
+
+    def nearest_line(self, posn):
+        if len(self.active_vein()) < 2:
+            return None, None
+
+        smallest = 0
+        smallest_dist = distance_to_line(
+            self.active_vein()[0], self.active_vein()[1], posn
+        )
+
+        for i in range(1, len(self.active_vein()) - 1):
+            curr = self.active_vein()[i]
+            next = self.active_vein()[i + 1]
+            dist = distance_to_line(curr, next, posn)
+
+            if dist < smallest_dist:
+                smallest = i
+                smallest_dist = dist
+
+        return smallest, smallest_dist
+
+    def draw(self, screen):
+        for idx, vein in enumerate(self.tendril):
+            if idx == self.active and not self.selecting:
+                continue
+
+            for i in range(len(vein) - 1):
+                aaline(
+                    screen,
+                    Editor.ALTERNATE_COLOR,
+                    map(int, self.viewer.world_to_screen(vein[i])),
+                    map(int, self.viewer.world_to_screen(vein[i + 1])),
+                    width=1,
+                )
+
+        if self.selecting:
+            nearest = self.nearest_vein(self.mouse_posn)
+            if nearest is not None:
+                for i in range(len(self.tendril[nearest]) - 1):
+                    aaline(
+                        screen,
+                        Editor.HOVER_COLOR,
+                        map(int, self.viewer.world_to_screen(self.tendril[nearest][i])),
+                        map(
+                            int,
+                            self.viewer.world_to_screen(self.tendril[nearest][i + 1]),
+                        ),
+                        width=1,
+                    )
+
+        if not self.selecting:
+            for i in range(len(self.active_vein()) - 1):
+                aaline(
+                    screen,
+                    (
+                        Editor.HOVER_COLOR
+                        if i == self.hovering_line
+                        else Editor.PRIMARY_COLOR
+                    ),
+                    map(int, self.viewer.world_to_screen(self.active_vein()[i])),
+                    map(int, self.viewer.world_to_screen(self.active_vein()[i + 1])),
+                    width=1,
+                )
+
+            for i, point in enumerate(self.active_vein()):
+                aacircle(
+                    screen,
+                    (
+                        Editor.HOVER_COLOR
+                        if i == self.hovering_point
+                        else Editor.PRIMARY_COLOR
+                    ),
+                    *map(int, self.viewer.world_to_screen(point)),
+                    3,
+                )
 
     def event(self, event):
         if event.type == KEYDOWN:
-            if event.key == K_BACKSPACE:
-                if len(self.points) > 0:
-                    self.points.pop()
-                    self.active_point = None
-                    self.active_line = None
+            if event.key == K_LALT or event.key == K_RALT:
+                self.selecting = True
 
-            if event.key == pygame.K_z and pygame.key.get_mods() & pygame.KMOD_CTRL:
-                if len(self.previous) > 0:
-                    self.points = self.previous.pop()
+            if event.key == K_BACKSPACE:
+                if len(self.active_vein()) > 0:
+                    self.save()
+                    self.active_vein().pop()
+                    self.hovering_point = None
+                    self.hovering_line = None
+
+            if event.key == K_z and pygame.key.get_mods() & KMOD_CTRL:
+                self.undo()
+
+            if event.key == K_n:
+                self.save()
+                self.tendril.append([])
+                self.active = len(self.tendril) - 1
+
+        if event.type == KEYUP:
+            if event.key == K_LALT or event.key == K_RALT:
+                self.selecting = False
 
         if event.type == MOUSEBUTTONDOWN:
             if event.button == 1:
-                idx = self.nearest_point()
+                idx, dist = self.nearest_point(self.viewer.screen_to_world(event.pos))
 
-                if idx is not None:
-                    self.create_savepoint()
+                if dist * self.viewer.zoom_scale() < Editor.HOVER_RANGE:
+                    self.save()
                     self.drag_active = True
                     self.drag_idx = idx
-                    self.drag_frames = 0
-
-        if event.type == MOUSEMOTION:
-            if self.drag_active and (
-                self.drag_frames > 10
-                or distance_between(
-                    self.viewer.translate(self.viewer.mouse_posn),
-                    self.viewer.translate(self.points[self.drag_idx]),
-                )
-                > 10
-            ):
-                self.points[self.drag_idx] = self.viewer.mouse_posn
+                    self.drag_time = 0
 
         if event.type == MOUSEBUTTONUP:
             if event.button == 1:
-                if self.drag_active and (
-                    self.drag_frames > 10
-                    or distance_between(
-                        self.viewer.translate(self.viewer.mouse_posn),
-                        self.viewer.translate(self.points[self.drag_idx]),
-                    )
-                    > 10
+                if self.selecting:
+                    nearest = self.nearest_vein(self.mouse_posn)
+                    if nearest is not None:
+                        self.active = nearest
+                        self.selecting = False
+                        return
+
+                if not self.dragging(event.pos):
+                    self.save()
+                    if self.hovering_line is not None:
+                        self.active_vein().insert(
+                            self.hovering_line + 1, self.mouse_posn
+                        )
+                    elif self.hovering_point is not None:
+                        self.active_vein().pop(self.hovering_point)
+
+                    else:
+                        self.active_vein().append(self.mouse_posn)
+
+                self.drag_active = False
+
+        if event.type == MOUSEMOTION:
+            self.mouse_posn = self.viewer.screen_to_world(event.pos)
+
+            if self.dragging(event.pos):
+                self.active_vein()[self.drag_idx] = self.mouse_posn
+
+            self.hovering_point = None
+            self.hovering_line = None
+
+            np_idx, np_dist = self.nearest_point(self.mouse_posn)
+            if (
+                np_idx is not None
+                and np_dist * self.viewer.zoom_scale() < Editor.HOVER_RANGE
+            ):
+                self.hovering_point = np_idx
+            else:
+                nl_idx, nl_dist = self.nearest_line(self.mouse_posn)
+                if (
+                    nl_idx is not None
+                    and nl_dist * self.viewer.zoom_scale() < Editor.HOVER_RANGE
                 ):
-                    self.drag_active = False
-                    return
-                elif self.drag_active:
-                    self.drag_active = False
+                    self.hovering_line = nl_idx
 
-                posn = self.viewer.screen_to_world(event.pos)
-                self.create_savepoint()
-
-                nearest_point = self.nearest_point(dist=5)
-                if nearest_point is not None:
-                    self.points.pop(nearest_point)
-                    return
-
-                nearest_line = self.nearest_line()
-                if nearest_line is not None:
-                    self.points.insert(nearest_line + 1, posn)
-                    return
-
-                self.points.append(posn)
+    def update(self, ms):
+        if self.drag_active:
+            self.drag_time += ms
