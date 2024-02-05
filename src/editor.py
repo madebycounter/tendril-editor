@@ -4,6 +4,7 @@ from lib.vector import Vector, distance_to_line
 from lib.aadraw import aacircle, aaline
 from lib.transform import piecewise, step_to, step_to_time
 from math import sin, pi, floor
+from playback import make_animations, interpolate
 
 
 class Editor:
@@ -36,6 +37,9 @@ class Editor:
         self.mouse_posn = Vector(0, 0)
 
         self.animating_pct = 0
+        self.animations = []
+
+        self.dimmer_surface = None
 
     def save(self):
         self.modified = True
@@ -110,49 +114,32 @@ class Editor:
             self.editing_draw(screen)
 
     def animating_draw(self, screen):
-        # def mod(x):
-        #     return sin(x * pi * 20) * 0.5 + 1
+        longest_anim = max([len(a) for a in self.animations])
+        idx = floor(self.animating_pct * longest_anim)
 
-        pw = piecewise(self.active_vein(), N=len(self.active_vein()))
-        print(len(pw))
+        if (
+            self.dimmer_surface is None
+            or self.dimmer_surface.get_size() != screen.get_size()
+        ):
+            self.dimmer_surface = pygame.Surface(screen.get_size())
+            self.dimmer_surface.set_alpha(128)
+            self.dimmer_surface.fill((0, 0, 0))
 
-        for i in range(len(pw) - 1):
-            aaline(
-                screen,
-                Editor.ANIMATE_COLOR,
-                map(int, self.viewer.world_to_screen(pw[i])),
-                map(int, self.viewer.world_to_screen(pw[i + 1])),
-                width=1,
-            )
+        screen.blit(self.dimmer_surface, (0, 0))
 
-        for p in pw:
-            aacircle(
-                screen,
-                Editor.ANIMATE_COLOR,
-                *map(int, self.viewer.world_to_screen(p)),
-                2,
-            )
+        for animation in self.animations:
+            if idx >= animation.start:
+                for i in range(idx - 1):
+                    curr = animation.get_frame(i)
+                    next = animation.get_frame(i + 1)
 
-        aacircle(
-            screen,
-            Editor.HOVER_COLOR,
-            *map(
-                int, self.viewer.world_to_screen(step_to_time(pw, self.animating_pct))
-            ),
-            5,
-        )
-
-        # aacircle(
-        #     screen,
-        #     Editor.HOVER_COLOR,
-        #     *map(
-        #         int,
-        #         self.viewer.world_to_screen(
-        #             step_to(self.active_vein(), self.animating_pct)
-        #         ),
-        #     ),
-        #     5,
-        # )
+                    aaline(
+                        screen,
+                        Editor.ANIMATE_COLOR,
+                        map(int, self.viewer.world_to_screen(curr)),
+                        map(int, self.viewer.world_to_screen(next)),
+                        width=3,
+                    )
 
     def editing_draw(self, screen):
         for idx, vein in enumerate(self.tendril):
@@ -211,7 +198,12 @@ class Editor:
 
     def event(self, event):
         if event.type == KEYDOWN and event.key == K_TAB:
-            self.animating = not self.animating
+            if self.animating:
+                self.animating = False
+            else:
+                self.animations = make_animations(interpolate(self.tendril), 0)
+                self.animating_pct = 0
+                self.animating = True
 
         if self.animating:
             self.animating_event(event)
@@ -262,7 +254,8 @@ class Editor:
                     if nearest is not None:
                         self.active = nearest
                         self.selecting = False
-                        return
+
+                    return
 
                 if not self.dragging(event.pos):
                     self.save()

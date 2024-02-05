@@ -16,11 +16,13 @@ def draw_hud(
 
     if show_help:
         help_text1 = font.render(
-            "Ctrl+O: open, Ctrl+S: save, Ctrl+I: set image", True, text_color
+            "Ctrl+O: open, Ctrl+S: save, Ctrl+I: set image, H: toggle help",
+            True,
+            text_color,
         )
 
         help_text2 = font.render(
-            "N: new vein, ALT: select vein, BACK: delete node, H: toggle help",
+            "N: new vein, ALT: select vein, BACK: delete node, TAB: toggle preview",
             True,
             text_color,
         )
