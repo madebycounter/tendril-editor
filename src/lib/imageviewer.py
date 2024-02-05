@@ -8,7 +8,7 @@ class ImageViewer:
     ZOOM_IN_BUTTON = 4
     ZOOM_OUT_BUTTON = 5
     ZOOM_SPEED = 0.4
-    MAX_ZOOM = 8
+    MAX_ZOOM = 7
     MIN_ZOOM = -8
     IMAGE_HEIGHT = 1000
 
