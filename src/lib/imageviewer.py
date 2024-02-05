@@ -8,7 +8,7 @@ class ImageViewer:
     ZOOM_IN_BUTTON = 4
     ZOOM_OUT_BUTTON = 5
     ZOOM_SPEED = 0.4
-    MAX_ZOOM = 7
+    MAX_ZOOM = 8
     MIN_ZOOM = -8
     IMAGE_HEIGHT = 1000
 
@@ -25,14 +25,17 @@ class ImageViewer:
         self.pan_origin = Vector(0, 0)
 
     def populate_cache(self):
-        transform = ImageViewer.IMAGE_HEIGHT / self.image.get_height()
+        ar = self.image.get_width() / self.image.get_height()
 
-        for level in range(ImageViewer.MIN_ZOOM, ImageViewer.MAX_ZOOM):
+        for level in range(ImageViewer.MIN_ZOOM, ImageViewer.MAX_ZOOM + 1):
+            print(level, self.zoom_scale(level=level))
             self.image_cache[level] = pygame.transform.scale(
                 self.image,
-                Vector(*self.image.get_size())
-                * self.zoom_scale(level=level)
-                * transform,
+                Vector(
+                    ImageViewer.IMAGE_HEIGHT * ar,
+                    ImageViewer.IMAGE_HEIGHT,
+                )
+                * self.zoom_scale(level=level),
             )
 
     def zoom(self, delta, center):

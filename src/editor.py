@@ -53,12 +53,10 @@ class Editor:
             self.modified = True
             self.tendril = self.history.pop()
 
-    def dragging(self, mouse):
+    def dragging(self):
         return self.drag_active and (
             self.drag_time > 100
-            or Vector.Distance(
-                self.viewer.screen_to_world(mouse), self.active_vein()[self.drag_idx]
-            )
+            or Vector.Distance(self.mouse_posn, self.active_vein()[self.drag_idx])
             * self.viewer.zoom_scale()
             > Editor.HOVER_RANGE * 2
         )
@@ -266,7 +264,7 @@ class Editor:
 
                     return
 
-                if not self.dragging(event.pos):
+                if not self.dragging():
                     self.save()
                     if self.hovering_line is not None:
                         self.active_vein().insert(
@@ -283,7 +281,7 @@ class Editor:
         if event.type == MOUSEMOTION:
             self.mouse_posn = self.viewer.screen_to_world(event.pos)
 
-            if self.dragging(event.pos):
+            if self.dragging():
                 self.active_vein()[self.drag_idx] = self.mouse_posn
 
             self.hovering_point = None
