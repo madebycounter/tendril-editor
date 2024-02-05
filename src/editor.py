@@ -2,6 +2,8 @@ import pygame
 from pygame.locals import *
 from lib.vector import Vector, distance_to_line
 from lib.aadraw import aacircle, aaline
+from lib.transform import piecewise, step_to, step_to_time
+from math import sin, pi, floor
 
 
 class Editor:
@@ -12,6 +14,8 @@ class Editor:
     HOVER_COLOR = (0, 0, 255)
     ALTERNATE_COLOR = (0, 255, 0)
 
+    ANIMATE_COLOR = (0, 200, 255)
+
     def __init__(self, viewer, tendril=[[]]):
         self.viewer = viewer
         self.tendril = tendril
@@ -19,6 +23,7 @@ class Editor:
         self.active = 0
 
         self.modified = False
+        self.animating = False
 
         self.selecting = False
         self.drag_active = False
@@ -29,6 +34,8 @@ class Editor:
         self.hovering_line = None
 
         self.mouse_posn = Vector(0, 0)
+
+        self.animating_pct = 0
 
     def save(self):
         self.modified = True
@@ -97,6 +104,57 @@ class Editor:
         return smallest, smallest_dist
 
     def draw(self, screen):
+        if self.animating:
+            self.animating_draw(screen)
+        else:
+            self.editing_draw(screen)
+
+    def animating_draw(self, screen):
+        # def mod(x):
+        #     return sin(x * pi * 20) * 0.5 + 1
+
+        pw = piecewise(self.active_vein(), N=len(self.active_vein()))
+        print(len(pw))
+
+        for i in range(len(pw) - 1):
+            aaline(
+                screen,
+                Editor.ANIMATE_COLOR,
+                map(int, self.viewer.world_to_screen(pw[i])),
+                map(int, self.viewer.world_to_screen(pw[i + 1])),
+                width=1,
+            )
+
+        for p in pw:
+            aacircle(
+                screen,
+                Editor.ANIMATE_COLOR,
+                *map(int, self.viewer.world_to_screen(p)),
+                2,
+            )
+
+        aacircle(
+            screen,
+            Editor.HOVER_COLOR,
+            *map(
+                int, self.viewer.world_to_screen(step_to_time(pw, self.animating_pct))
+            ),
+            5,
+        )
+
+        # aacircle(
+        #     screen,
+        #     Editor.HOVER_COLOR,
+        #     *map(
+        #         int,
+        #         self.viewer.world_to_screen(
+        #             step_to(self.active_vein(), self.animating_pct)
+        #         ),
+        #     ),
+        #     5,
+        # )
+
+    def editing_draw(self, screen):
         for idx, vein in enumerate(self.tendril):
             if idx == self.active and not self.selecting:
                 continue
@@ -152,6 +210,18 @@ class Editor:
                 )
 
     def event(self, event):
+        if event.type == KEYDOWN and event.key == K_TAB:
+            self.animating = not self.animating
+
+        if self.animating:
+            self.animating_event(event)
+        else:
+            self.editing_event(event)
+
+    def animating_event(self, event):
+        pass
+
+    def editing_event(self, event):
         if event.type == KEYDOWN:
             if event.key == K_LALT or event.key == K_RALT:
                 self.selecting = True
@@ -232,5 +302,16 @@ class Editor:
                     self.hovering_line = nl_idx
 
     def update(self, ms):
+        if self.animating:
+            self.animating_update(ms)
+        else:
+            self.editing_update(ms)
+
+    def animating_update(self, ms):
+        self.animating_pct += ms / 10000
+        if self.animating_pct > 1:
+            self.animating_pct = 0
+
+    def editing_update(self, ms):
         if self.drag_active:
             self.drag_time += ms
