@@ -22,7 +22,7 @@ pygame.display.set_caption("William's Veiny Tendril Editor")
 
 image = pygame.image.load("sample.png")
 viewer = ImageViewer(image)
-editor = Editor(viewer, tendril=load_vein("test.vein"))
+editor = Editor(viewer)
 ms = 0
 
 font = pygame.font.SysFont("Comic Sans MS", 16)

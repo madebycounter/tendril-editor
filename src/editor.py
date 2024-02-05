@@ -60,7 +60,7 @@ class Editor:
                 self.viewer.screen_to_world(mouse), self.active_vein()[self.drag_idx]
             )
             * self.viewer.zoom_scale()
-            > Editor.HOVER_RANGE
+            > Editor.HOVER_RANGE * 2
         )
 
     def active_vein(self):
@@ -72,7 +72,7 @@ class Editor:
                 point1 = vein[idx]
                 point2 = vein[idx - 1]
 
-                if distance_to_line(point1, point2, posn) < Editor.HOVER_RANGE:
+                if distance_to_line(point1, point2, posn) < Editor.HOVER_RANGE * 2:
                     return curr
 
     def nearest_point(self, posn):

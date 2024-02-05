@@ -2,8 +2,6 @@ from load import load_vein
 from lib.vector import Vector, distance_to_line
 from lib.transform import line_length, piecewise
 
-tendril = load_vein("test.vein")
-
 
 class Animation:
     def __init__(self, start, keyframes):
