@@ -1,6 +1,6 @@
 from load import load_vein
 from lib.vector import Vector, distance_to_line
-from lib.transform import piecewise
+from lib.transform import line_length, piecewise
 
 tendril = load_vein("test.vein")
 
@@ -90,6 +90,7 @@ def make_animations(tendril, vein_no, start=0):
 def interpolate(tendril, scale=2):
     new_tendril = []
     for vein in tendril:
-        new_tendril.append(piecewise(vein, N=len(vein) * scale))
+        length = line_length(vein)
+        new_tendril.append(piecewise(vein, N=length / 5 * scale))
 
     return new_tendril

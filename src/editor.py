@@ -128,6 +128,15 @@ class Editor:
         screen.blit(self.dimmer_surface, (0, 0))
 
         for animation in self.animations:
+            # # circle at each frame
+            # for i in range(len(animation)):
+            #     aacircle(
+            #         screen,
+            #         Editor.ANIMATE_COLOR,
+            #         *map(int, self.viewer.world_to_screen(animation.get_frame(i))),
+            #         3,
+            #     )
+
             if idx >= animation.start:
                 for i in range(idx - 1):
                     curr = animation.get_frame(i)
@@ -201,7 +210,7 @@ class Editor:
             if self.animating:
                 self.animating = False
             else:
-                self.animations = make_animations(interpolate(self.tendril), 0)
+                self.animations = make_animations(interpolate(self.tendril, scale=1), 0)
                 self.animating_pct = 0
                 self.animating = True
 

@@ -101,7 +101,7 @@ def main():
 
         pygame.display.flip()
 
-        ms = clock.tick(120)
+        ms = clock.tick(60)
         editor.update(ms)
 
 
