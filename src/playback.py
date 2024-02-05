@@ -89,6 +89,9 @@ def interpolate(tendril, scale=2):
     new_tendril = []
     for vein in tendril:
         length = line_length(vein)
-        new_tendril.append(piecewise(vein, N=length / 5 * scale))
+        if len(vein) < 2:
+            new_tendril.append(vein)
+        else:
+            new_tendril.append(piecewise(vein, N=length / 5 * scale))
 
     return new_tendril

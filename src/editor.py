@@ -8,7 +8,7 @@ from playback import make_animations, interpolate
 
 
 class Editor:
-    HOVER_RANGE = 5
+    HOVER_RANGE = 7
     HISTORY_SIZE = 100
 
     PRIMARY_COLOR = (255, 0, 0)
@@ -310,7 +310,7 @@ class Editor:
             self.editing_update(ms)
 
     def animating_update(self, ms):
-        self.animating_pct += ms / 10000
+        self.animating_pct += ms / 1000
         if self.animating_pct > 1:
             self.animating_pct = 0
 
