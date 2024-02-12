@@ -7,19 +7,30 @@ from tendril import Tendril
 
 
 class Editor:
-    HOVER_RANGE = 7
-    HISTORY_SIZE = 100
+    def __init__(
+        self,
+        viewer,
+        tendril=Tendril(),
+        hover_range=7,
+        history_size=100,
+        primary_color=(255, 0, 0),
+        hover_color=(0, 0, 255),
+        alternate_color=(0, 255, 0),
+        parent_color=(0, 170, 0),
+        animate_color=(0, 200, 255),
+        animate_samples=50,
+        animate_speed=5000,
+    ):
+        self.hover_range = hover_range
+        self.history_size = history_size
+        self.primary_color = primary_color
+        self.hover_color = hover_color
+        self.alternate_color = alternate_color
+        self.parent_color = parent_color
+        self.animate_color = animate_color
+        self.animate_samples = animate_samples
+        self.animate_speed = animate_speed
 
-    PRIMARY_COLOR = (255, 0, 0)
-    HOVER_COLOR = (0, 0, 255)
-    ALTERNATE_COLOR = (0, 150, 0)
-    PARENT_COLOR = (0, 255, 0)
-
-    ANIMATE_COLOR = (0, 200, 255)
-    ANIMATE_SAMPLES = 50
-    ANIMATE_SPEED = 5000
-
-    def __init__(self, viewer, tendril=Tendril()):
         self.viewer = viewer
         self.tendril = tendril
         self.history = []
@@ -47,7 +58,7 @@ class Editor:
         self.modified = True
         self.history.append((self.active, self.tendril.copy()))
 
-        if len(self.history) > Editor.HISTORY_SIZE:
+        if len(self.history) > self.history_size:
             self.history.pop(0)
 
     def undo(self):
@@ -60,7 +71,7 @@ class Editor:
             self.drag_time > 100
             or Vector.Distance(self.mouse_posn, self.active_vein()[self.drag_idx])
             * self.viewer.zoom_scale()
-            > Editor.HOVER_RANGE * 2
+            > self.hover_range * 2
         )
 
     def active_vein(self):
@@ -72,7 +83,7 @@ class Editor:
                 point1 = vein[idx]
                 point2 = vein[idx - 1]
 
-                if distance_to_line(point1, point2, posn) < Editor.HOVER_RANGE * 2:
+                if distance_to_line(point1, point2, posn) < self.hover_range * 2:
                     return vein
 
     def nearest_point(self, posn):
@@ -114,7 +125,7 @@ class Editor:
             self.editing_draw(screen)
 
     def animating_draw(self, screen):
-        step = 1.0 / Editor.ANIMATE_SAMPLES
+        step = 1.0 / self.animate_samples
 
         if (
             self.dimmer_surface is None
@@ -136,7 +147,7 @@ class Editor:
 
                 aaline(
                     screen,
-                    Editor.ANIMATE_COLOR,
+                    self.animate_color,
                     map(int, self.viewer.world_to_screen(curr)),
                     map(int, self.viewer.world_to_screen(next)),
                     width=3,
@@ -148,9 +159,9 @@ class Editor:
                 continue
 
             if self.tendril.parent_of(self.active) == vein.id:
-                color = Editor.PARENT_COLOR
+                color = self.parent_color
             else:
-                color = Editor.ALTERNATE_COLOR
+                color = self.alternate_color
 
             for i in range(len(vein) - 1):
                 aaline(
@@ -167,7 +178,7 @@ class Editor:
                 for i in range(len(nearest) - 1):
                     aaline(
                         screen,
-                        Editor.HOVER_COLOR,
+                        self.hover_color,
                         map(int, self.viewer.world_to_screen(nearest[i])),
                         map(
                             int,
@@ -181,9 +192,9 @@ class Editor:
                 aaline(
                     screen,
                     (
-                        Editor.HOVER_COLOR
+                        self.hover_color
                         if i == self.hovering_line
-                        else Editor.PRIMARY_COLOR
+                        else self.primary_color
                     ),
                     map(int, self.viewer.world_to_screen(self.active_vein()[i])),
                     map(int, self.viewer.world_to_screen(self.active_vein()[i + 1])),
@@ -194,9 +205,9 @@ class Editor:
                 aacircle(
                     screen,
                     (
-                        Editor.HOVER_COLOR
+                        self.hover_color
                         if i == self.hovering_point
-                        else Editor.PRIMARY_COLOR
+                        else self.primary_color
                     ),
                     *map(int, self.viewer.world_to_screen(point)),
                     3,
@@ -251,7 +262,7 @@ class Editor:
                 self.mouse_update()
                 idx, dist = self.nearest_point(self.viewer.screen_to_world(event.pos))
 
-                if dist * self.viewer.zoom_scale() < Editor.HOVER_RANGE:
+                if dist * self.viewer.zoom_scale() < self.hover_range:
                     self.save()
                     self.drag_active = True
                     self.drag_idx = idx
@@ -298,16 +309,13 @@ class Editor:
         self.hovering_line = None
 
         np_idx, np_dist = self.nearest_point(self.mouse_posn)
-        if (
-            np_idx is not None
-            and np_dist * self.viewer.zoom_scale() < Editor.HOVER_RANGE
-        ):
+        if np_idx is not None and np_dist * self.viewer.zoom_scale() < self.hover_range:
             self.hovering_point = np_idx
         else:
             nl_idx, nl_dist = self.nearest_line(self.mouse_posn)
             if (
                 nl_idx is not None
-                and nl_dist * self.viewer.zoom_scale() < Editor.HOVER_RANGE
+                and nl_dist * self.viewer.zoom_scale() < self.hover_range
             ):
                 self.hovering_line = nl_idx
 
@@ -318,7 +326,7 @@ class Editor:
             self.editing_update(ms)
 
     def animating_update(self, ms):
-        self.animating_pct += ms / Editor.ANIMATE_SPEED
+        self.animating_pct += ms / self.animate_speed
         if self.animating_pct > 1:
             self.animating_pct = 0
 

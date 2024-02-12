@@ -4,15 +4,25 @@ from .vector import Vector
 
 
 class ImageViewer:
-    PAN_BUTTON = 2
-    ZOOM_IN_BUTTON = 4
-    ZOOM_OUT_BUTTON = 5
-    ZOOM_SPEED = 0.4
-    MAX_ZOOM = 8
-    MIN_ZOOM = -8
-    IMAGE_HEIGHT = 1000
+    def __init__(
+        self,
+        image,
+        pan_button=2,
+        zoom_in_button=4,
+        zoom_out_button=5,
+        zoom_speed=0.4,
+        max_zoom=8,
+        min_zoom=-8,
+        image_height=1000,
+    ):
+        self.pan_button = pan_button
+        self.zoom_in_button = zoom_in_button
+        self.zoom_out_button = zoom_out_button
+        self.zoom_speed = zoom_speed
+        self.max_zoom = max_zoom
+        self.min_zoom = min_zoom
+        self.image_height = image_height
 
-    def __init__(self, image):
         self.original = image
         self.image = image.convert(16)
         self.zoom_level = 0
@@ -27,21 +37,21 @@ class ImageViewer:
     def populate_cache(self):
         ar = self.image.get_width() / self.image.get_height()
 
-        for level in range(ImageViewer.MIN_ZOOM, ImageViewer.MAX_ZOOM + 1):
+        for level in range(self.min_zoom, self.max_zoom + 1):
             self.image_cache[level] = pygame.transform.scale(
                 self.image,
                 Vector(
-                    ImageViewer.IMAGE_HEIGHT * ar,
-                    ImageViewer.IMAGE_HEIGHT,
+                    self.image_height * ar,
+                    self.image_height,
                 )
                 * self.zoom_scale(level=level),
             )
 
     def zoom(self, delta, center):
-        if self.zoom_level + delta > ImageViewer.MAX_ZOOM:
+        if self.zoom_level + delta > self.max_zoom:
             return
 
-        if self.zoom_level + delta < ImageViewer.MIN_ZOOM:
+        if self.zoom_level + delta < self.min_zoom:
             return
 
         old_zoom = self.zoom_scale()
@@ -54,8 +64,8 @@ class ImageViewer:
 
     def zoom_scale(self, level=None):
         if level is not None:
-            return (1 + ImageViewer.ZOOM_SPEED) ** level
-        return (1 + ImageViewer.ZOOM_SPEED) ** self.zoom_level
+            return (1 + self.zoom_speed) ** level
+        return (1 + self.zoom_speed) ** self.zoom_level
 
     def screen_to_world(self, posn):
         return (posn - self.posn) / self.zoom_scale()
@@ -67,14 +77,14 @@ class ImageViewer:
         if event.type == MOUSEBUTTONDOWN:
             mouse_posn = Vector(*event.pos)
 
-            if event.button == ImageViewer.PAN_BUTTON:
+            if event.button == self.pan_button:
                 self.pan_origin = mouse_posn
                 self.pan_active = True
 
-            if event.button == ImageViewer.ZOOM_IN_BUTTON:
+            if event.button == self.zoom_in_button:
                 self.zoom(1, self.screen_to_world(mouse_posn))
 
-            if event.button == ImageViewer.ZOOM_OUT_BUTTON:
+            if event.button == self.zoom_out_button:
                 self.zoom(-1, self.screen_to_world(mouse_posn))
 
         if event.type == MOUSEMOTION:
@@ -85,7 +95,7 @@ class ImageViewer:
                 self.pan_origin = Vector(*event.pos)
 
         if event.type == pygame.MOUSEBUTTONUP:
-            if event.button == ImageViewer.PAN_BUTTON:
+            if event.button == self.pan_button:
                 self.pan_active = False
 
     def draw(self, screen):
