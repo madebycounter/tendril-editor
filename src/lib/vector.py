@@ -42,6 +42,12 @@ class Vector:
         return sum([(v2 - v1) ** 2 for v1, v2 in zip(a, b)]) ** 0.5
 
     @staticmethod
+    def Lerp(a, b, pct):
+        if Vector.IsVector(a) and Vector.IsVector(b):
+            return Vector(*[(v2 - v1) * pct + v1 for v1, v2 in zip(a.values, b.values)])
+        return Vector(*[(v2 - v1) * pct + v1 for v1, v2 in zip(a, b)])
+
+    @staticmethod
     def IsVector(v):
         return isinstance(v, Vector)
 

@@ -32,10 +32,10 @@ class Tendril:
 
     def __repr__(self):
         children = [repr(d) for d in self.children]
-        string = f"T-{self.id}"
+        string = f"Tendril({str(self.id)[-5:]}, {len(self)}, {len(children)})"
         for child in children:
             for line in child.split("\n"):
-                string += "\n    %s" % line
+                string += "\n  %s" % line
         return string
 
     def __getitem__(self, idx):

@@ -2,9 +2,7 @@ import pygame
 from pygame.locals import *
 from lib.vector import Vector, distance_to_line
 from lib.aadraw import aacircle, aaline
-from lib.transform import piecewise, step_to, step_to_time
-from math import sin, pi, floor
-from playback import make_animations, interpolate
+from animate import make_animations
 from tendril import Tendril
 
 
@@ -14,10 +12,12 @@ class Editor:
 
     PRIMARY_COLOR = (255, 0, 0)
     HOVER_COLOR = (0, 0, 255)
-    ALTERNATE_COLOR = (0, 255, 0)
-    PARENT_COLOR = (0, 150, 0)
+    ALTERNATE_COLOR = (0, 150, 0)
+    PARENT_COLOR = (0, 255, 0)
 
     ANIMATE_COLOR = (0, 200, 255)
+    ANIMATE_SAMPLES = 50
+    ANIMATE_SPEED = 5000
 
     def __init__(self, viewer, tendril=Tendril()):
         self.viewer = viewer
@@ -50,10 +50,7 @@ class Editor:
         if len(self.history) > Editor.HISTORY_SIZE:
             self.history.pop(0)
 
-        print(self.history)
-
     def undo(self):
-        print(self.tendril)
         if len(self.history) > 0:
             self.modified = True
             self.active, self.tendril = self.history.pop()
@@ -117,8 +114,7 @@ class Editor:
             self.editing_draw(screen)
 
     def animating_draw(self, screen):
-        longest_anim = max([len(a) for a in self.animations])
-        idx = floor(self.animating_pct * longest_anim)
+        step = 1.0 / Editor.ANIMATE_SAMPLES
 
         if (
             self.dimmer_surface is None
@@ -131,27 +127,20 @@ class Editor:
         screen.blit(self.dimmer_surface, (0, 0))
 
         for animation in self.animations:
-            # # circle at each frame
-            # for i in range(len(animation)):
-            #     aacircle(
-            #         screen,
-            #         Editor.ANIMATE_COLOR,
-            #         *map(int, self.viewer.world_to_screen(animation.get_frame(i))),
-            #         3,
-            #     )
+            i = 0
+            while i < self.animating_pct:
+                curr = animation[i].position
+                next = animation[i + step].position
 
-            if idx >= animation.start:
-                for i in range(idx - 1):
-                    curr = animation.get_frame(i)
-                    next = animation.get_frame(i + 1)
+                i += step
 
-                    aaline(
-                        screen,
-                        Editor.ANIMATE_COLOR,
-                        map(int, self.viewer.world_to_screen(curr)),
-                        map(int, self.viewer.world_to_screen(next)),
-                        width=3,
-                    )
+                aaline(
+                    screen,
+                    Editor.ANIMATE_COLOR,
+                    map(int, self.viewer.world_to_screen(curr)),
+                    map(int, self.viewer.world_to_screen(next)),
+                    width=3,
+                )
 
     def editing_draw(self, screen):
         for vein in self.tendril.all():
@@ -218,7 +207,7 @@ class Editor:
             if self.animating:
                 self.animating = False
             else:
-                self.animations = make_animations(interpolate(self.tendril, scale=1), 0)
+                self.animations = make_animations(self.tendril)
                 self.animating_pct = 0
                 self.animating = True
 
@@ -329,7 +318,7 @@ class Editor:
             self.editing_update(ms)
 
     def animating_update(self, ms):
-        self.animating_pct += ms / 1000
+        self.animating_pct += ms / Editor.ANIMATE_SPEED
         if self.animating_pct > 1:
             self.animating_pct = 0
 
