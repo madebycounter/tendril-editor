@@ -145,13 +145,14 @@ class Editor:
 
                 i += step
 
-                aaline(
-                    screen,
-                    self.animate_color,
-                    map(int, self.viewer.world_to_screen(curr)),
-                    map(int, self.viewer.world_to_screen(next)),
-                    width=3,
-                )
+                if animation[i].visible:
+                    aaline(
+                        screen,
+                        self.animate_color,
+                        map(int, self.viewer.world_to_screen(curr)),
+                        map(int, self.viewer.world_to_screen(next)),
+                        width=3,
+                    )
 
                 # aacircle(
                 #     screen,
