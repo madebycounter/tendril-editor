@@ -76,6 +76,7 @@ class Animation:
 
 def make_animations_iter(tendril, start=0):
     animation = Animation()
+    animation[0] = State(tendril[0], 0, 1, False)
     kf = start
 
     for i in range(len(tendril) - 1):
@@ -84,11 +85,21 @@ def make_animations_iter(tendril, start=0):
         animation[kf] = State(curr, 0, 1, True)
         kf += Vector.Distance(curr, next)
 
-    animation[kf] = State(tendril[-1], 0, 1, True)
+    animation[kf] = State(tendril[-1], 0, 1, False)
 
     animations = [(tendril, animation)]
     for child in tendril.children:
-        animations += make_animations_iter(child)
+        first = child[0]
+        closest = min(tendril.data, key=lambda p: Vector.Distance(first, p))
+        closest_idx = tendril.data.index(closest)
+
+        start_offset = 0
+        for i in range(closest_idx):
+            curr = tendril[i]
+            next = tendril[i + 1]
+            start_offset += Vector.Distance(curr, next)
+
+        animations += make_animations_iter(child, start=start + start_offset)
 
     return animations
 
@@ -100,15 +111,8 @@ def make_animations(source):
     anims = make_animations_iter(source)
 
     longest = max([a[1].end() for a in anims])
-    for tendril, anim in anims:
+    for _, anim in anims:
         anim.transform_keyframes(lambda k: k / longest)
-
-        parent_id = source.parent_of(tendril.id)
-        if parent_id is not None:
-            parent = source.get_by_id(parent_id)
-            first = tendril[0]
-            closest = min(parent.data, key=lambda p: Vector.Distance(first, p))
-            anim[0].position = closest
 
     return [a[1] for a in anims]
 
