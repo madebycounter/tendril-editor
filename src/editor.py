@@ -226,6 +226,7 @@ class Editor:
                 self.selecting = True
 
             if event.key == K_BACKSPACE:
+                self.mouse_update()
                 if len(self.active_vein()) > 0:
                     self.save()
                     self.active_vein().pop()
@@ -246,6 +247,7 @@ class Editor:
 
         if event.type == MOUSEBUTTONDOWN:
             if event.button == 1:
+                self.mouse_update()
                 idx, dist = self.nearest_point(self.viewer.screen_to_world(event.pos))
 
                 if dist * self.viewer.zoom_scale() < Editor.HOVER_RANGE:
@@ -256,6 +258,7 @@ class Editor:
 
         if event.type == MOUSEBUTTONUP:
             if event.button == 1:
+                self.mouse_update()
                 if self.selecting:
                     nearest = self.nearest_vein(self.mouse_posn)
                     if nearest is not None:
@@ -272,34 +275,40 @@ class Editor:
                         )
                     elif self.hovering_point is not None:
                         self.active_vein().pop(self.hovering_point)
-
+                        self.hovering_point = None
+                        self.hovering_line = None
                     else:
                         self.active_vein().append(self.mouse_posn)
 
                 self.drag_active = False
+                self.mouse_update(event)
 
         if event.type == MOUSEMOTION:
+            self.mouse_update(event=event)
+
+    def mouse_update(self, event=None):
+        if event:
             self.mouse_posn = self.viewer.screen_to_world(event.pos)
 
-            if self.dragging():
-                self.active_vein()[self.drag_idx] = self.mouse_posn
+        if self.dragging():
+            self.active_vein()[self.drag_idx] = self.mouse_posn
 
-            self.hovering_point = None
-            self.hovering_line = None
+        self.hovering_point = None
+        self.hovering_line = None
 
-            np_idx, np_dist = self.nearest_point(self.mouse_posn)
+        np_idx, np_dist = self.nearest_point(self.mouse_posn)
+        if (
+            np_idx is not None
+            and np_dist * self.viewer.zoom_scale() < Editor.HOVER_RANGE
+        ):
+            self.hovering_point = np_idx
+        else:
+            nl_idx, nl_dist = self.nearest_line(self.mouse_posn)
             if (
-                np_idx is not None
-                and np_dist * self.viewer.zoom_scale() < Editor.HOVER_RANGE
+                nl_idx is not None
+                and nl_dist * self.viewer.zoom_scale() < Editor.HOVER_RANGE
             ):
-                self.hovering_point = np_idx
-            else:
-                nl_idx, nl_dist = self.nearest_line(self.mouse_posn)
-                if (
-                    nl_idx is not None
-                    and nl_dist * self.viewer.zoom_scale() < Editor.HOVER_RANGE
-                ):
-                    self.hovering_line = nl_idx
+                self.hovering_line = nl_idx
 
     def update(self, ms):
         if self.animating:
