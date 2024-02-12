@@ -101,7 +101,19 @@ def main():
 
                     if load_file:
                         active_file = load_file
-                        editor = Editor(viewer, load_vein(load_file))
+                        editor = Editor(
+                            viewer,
+                            load_vein(load_file),
+                            hover_range=options.HOVER_RANGE,
+                            history_size=options.HISTORY_SIZE,
+                            primary_color=options.PRIMARY_COLOR,
+                            hover_color=options.HOVER_COLOR,
+                            alternate_color=options.ALTERNATE_COLOR,
+                            parent_color=options.PARENT_COLOR,
+                            animate_color=options.ANIMATE_COLOR,
+                            animate_samples=options.ANIMATE_SAMPLES,
+                            animate_speed=options.ANIMATE_SPEED,
+                        )
 
                 if event.key == K_s and pygame.key.get_mods() & KMOD_CTRL:
                     save()

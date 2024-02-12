@@ -153,6 +153,13 @@ class Editor:
                     width=3,
                 )
 
+                # aacircle(
+                #     screen,
+                #     self.animate_color,
+                #     *map(int, self.viewer.world_to_screen(curr)),
+                #     3,
+                # )
+
     def editing_draw(self, screen):
         for vein in self.tendril.all():
             if vein.id == self.active and not self.selecting:

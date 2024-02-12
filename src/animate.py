@@ -26,7 +26,9 @@ class Animation:
         self.keyframes = keyframes or {}
 
     def __repr__(self):
-        return f"Animation({self.start()}-{self.end()}, {len(self.keyframes)})"
+        start = round(self.start(), 2)
+        end = round(self.end(), 2)
+        return f"Animation({start} -> {end}, {len(self.keyframes)})"
 
     def get_state(self, time):
         if time in self.keyframes:
@@ -75,24 +77,44 @@ class Animation:
 def make_animations_iter(tendril, start=0):
     animation = Animation()
     kf = start
+
     for i in range(len(tendril) - 1):
         curr = tendril[i]
         next = tendril[i + 1]
         animation[kf] = State(curr, 0, 1, True)
         kf += Vector.Distance(curr, next)
 
-    animations = [animation]
+    animations = [(tendril, animation)]
     for child in tendril.children:
         animations += make_animations_iter(child)
 
     return animations
 
 
-def make_animations(tendril):
-    anims = make_animations_iter(tendril)
+def make_animations(source):
+    anims = make_animations_iter(source)
 
-    longest = max([a.end() for a in anims])
-    for anim in anims:
+    longest = max([a[1].end() for a in anims])
+    for tendril, anim in anims:
         anim.transform_keyframes(lambda k: k / longest)
 
-    return anims
+        parent_id = source.parent_of(tendril.id)
+        if parent_id is not None:
+            parent = source.get_by_id(parent_id)
+            first = tendril[0]
+            closest = min(parent.data, key=lambda p: Vector.Distance(first, p))
+            anim[0].position = closest
+
+    return [a[1] for a in anims]
+
+
+if __name__ == "__main__":
+    from tendril import Tendril
+
+    p = "A:\\projects\\nava onti\\music videos\\vfx + sfx\\tendrils\\veins\\image1.vein"
+    tendril = Tendril.load(p)
+
+    print(tendril)
+
+    animations = make_animations(tendril)
+    print(animations)
