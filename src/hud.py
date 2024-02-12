@@ -12,7 +12,9 @@ def draw_hud(
     text_color=(255, 255, 255),
     bg_color=(0, 0, 0),
 ):
-    vein_sizes = [len(vein) for vein in editor.tendril]
+    all_veins = editor.tendril.all()
+    vein_id = str(editor.active)[-6:]
+    vein_sizes = [len(vein) for vein in all_veins]
 
     if show_help:
         help_text1 = font.render(
@@ -68,7 +70,7 @@ def draw_hud(
         text_color,
     )
     text2 = font.render(
-        f"vein {editor.active + 1}/{len(editor.tendril)}, nodes {vein_sizes[editor.active]}/{sum(vein_sizes)}",
+        f"vein ...{vein_id} {all_veins.index(editor.active_vein()) + 1}/{len(all_veins)}, nodes {len(editor.active_vein())}/{sum(vein_sizes)}",
         True,
         text_color,
     )

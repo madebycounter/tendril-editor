@@ -5,6 +5,7 @@ from lib.aadraw import aacircle, aaline
 from lib.transform import piecewise, step_to, step_to_time
 from math import sin, pi, floor
 from playback import make_animations, interpolate
+from tendril import Tendril
 
 
 class Editor:
@@ -14,14 +15,15 @@ class Editor:
     PRIMARY_COLOR = (255, 0, 0)
     HOVER_COLOR = (0, 0, 255)
     ALTERNATE_COLOR = (0, 255, 0)
+    PARENT_COLOR = (0, 150, 0)
 
     ANIMATE_COLOR = (0, 200, 255)
 
-    def __init__(self, viewer, tendril=[[]]):
+    def __init__(self, viewer, tendril=Tendril()):
         self.viewer = viewer
         self.tendril = tendril
         self.history = []
-        self.active = 0
+        self.active = self.tendril.id
 
         self.modified = False
         self.animating = False
@@ -43,15 +45,18 @@ class Editor:
 
     def save(self):
         self.modified = True
-        self.history.append([a[:] for a in self.tendril])
+        self.history.append((self.active, self.tendril.copy()))
 
         if len(self.history) > Editor.HISTORY_SIZE:
             self.history.pop(0)
 
+        print(self.history)
+
     def undo(self):
+        print(self.tendril)
         if len(self.history) > 0:
             self.modified = True
-            self.tendril = self.history.pop()
+            self.active, self.tendril = self.history.pop()
 
     def dragging(self):
         return self.drag_active and (
@@ -62,16 +67,16 @@ class Editor:
         )
 
     def active_vein(self):
-        return self.tendril[self.active]
+        return self.tendril.get_by_id(self.active)
 
-    def nearest_vein(self, posn):
-        for curr, vein in enumerate(self.tendril):
+    def nearest_tendril(self, posn):
+        for vein in self.tendril.all():
             for idx in range(1, len(vein)):
                 point1 = vein[idx]
                 point2 = vein[idx - 1]
 
                 if distance_to_line(point1, point2, posn) < Editor.HOVER_RANGE * 2:
-                    return curr
+                    return vein
 
     def nearest_point(self, posn):
         smallest = 0
@@ -149,30 +154,35 @@ class Editor:
                     )
 
     def editing_draw(self, screen):
-        for idx, vein in enumerate(self.tendril):
-            if idx == self.active and not self.selecting:
+        for vein in self.tendril.all():
+            if vein.id == self.active and not self.selecting:
                 continue
+
+            if self.tendril.parent_of(self.active) == vein.id:
+                color = Editor.PARENT_COLOR
+            else:
+                color = Editor.ALTERNATE_COLOR
 
             for i in range(len(vein) - 1):
                 aaline(
                     screen,
-                    Editor.ALTERNATE_COLOR,
+                    color,
                     map(int, self.viewer.world_to_screen(vein[i])),
                     map(int, self.viewer.world_to_screen(vein[i + 1])),
                     width=1,
                 )
 
         if self.selecting:
-            nearest = self.nearest_vein(self.mouse_posn)
+            nearest = self.nearest_tendril(self.mouse_posn)
             if nearest is not None:
-                for i in range(len(self.tendril[nearest]) - 1):
+                for i in range(len(nearest) - 1):
                     aaline(
                         screen,
                         Editor.HOVER_COLOR,
-                        map(int, self.viewer.world_to_screen(self.tendril[nearest][i])),
+                        map(int, self.viewer.world_to_screen(nearest[i])),
                         map(
                             int,
-                            self.viewer.world_to_screen(self.tendril[nearest][i + 1]),
+                            self.viewer.world_to_screen(nearest[i + 1]),
                         ),
                         width=1,
                     )
@@ -238,8 +248,10 @@ class Editor:
 
             if event.key == K_n:
                 self.save()
-                self.tendril.append([])
-                self.active = len(self.tendril) - 1
+
+                new = Tendril()
+                self.active_vein().add_child(new)
+                self.active = new.id
 
         if event.type == KEYUP:
             if event.key == K_LALT or event.key == K_RALT:
@@ -260,9 +272,9 @@ class Editor:
             if event.button == 1:
                 self.mouse_update()
                 if self.selecting:
-                    nearest = self.nearest_vein(self.mouse_posn)
+                    nearest = self.nearest_tendril(self.mouse_posn)
                     if nearest is not None:
-                        self.active = nearest
+                        self.active = nearest.id
                         self.selecting = False
 
                     return
