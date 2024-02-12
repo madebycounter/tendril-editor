@@ -28,7 +28,6 @@ class ImageViewer:
         ar = self.image.get_width() / self.image.get_height()
 
         for level in range(ImageViewer.MIN_ZOOM, ImageViewer.MAX_ZOOM + 1):
-            print(level, self.zoom_scale(level=level))
             self.image_cache[level] = pygame.transform.scale(
                 self.image,
                 Vector(
