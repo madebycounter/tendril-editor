@@ -31,12 +31,17 @@ class Tendril:
         self.children.remove(child)
 
     def __repr__(self):
-        children = [repr(d) for d in self.children]
-        string = f"Tendril({str(self.id)[-5:]}, {len(self)}, {len(children)})"
+        return f"Tendril({str(self.id)[-5:]}, {len(self)}, {len(self.children)})"
+
+    def __str__(self) -> str:
+        if len(self.children) == 0:
+            return repr(self)
+        children = [str(d) for d in self.children]
+        string = repr(self) + " ["
         for child in children:
-            for line in child.split("\n"):
-                string += "\n  %s" % line
-        return string
+            for idx, line in enumerate(child.split("\n")):
+                string += "\n    %s" % line
+        return string + "\n]"
 
     def __getitem__(self, idx):
         return self.data[idx]
@@ -77,5 +82,6 @@ class Tendril:
         return individuals
 
     @staticmethod
-    def decode(data):
-        return pickle.loads(data)
+    def load(path):
+        with open(path, "rb") as file:
+            return pickle.load(file)
