@@ -84,6 +84,8 @@ def make_animations_iter(tendril, start=0):
         animation[kf] = State(curr, 0, 1, True)
         kf += Vector.Distance(curr, next)
 
+    animation[kf] = State(tendril[-1], 0, 1, True)
+
     animations = [(tendril, animation)]
     for child in tendril.children:
         animations += make_animations_iter(child)
@@ -92,6 +94,9 @@ def make_animations_iter(tendril, start=0):
 
 
 def make_animations(source):
+    if len(source) < 2:
+        return []
+
     anims = make_animations_iter(source)
 
     longest = max([a[1].end() for a in anims])
