@@ -3,3 +3,4 @@ __pycache__
 *.vein
 *.pickle
 options.cfg
+render/
