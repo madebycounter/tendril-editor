@@ -3,7 +3,8 @@ import uuid
 
 
 class Tendril:
-    def __init__(self, data=None, children=None, id=None):
+    def __init__(self, width=1, data=None, children=None, id=None):
+        self.width = width
         self.data = data or []
         self.children = children or []
         self.id = id or uuid.uuid4()
@@ -72,7 +73,10 @@ class Tendril:
 
     def copy(self):
         return Tendril(
-            self.data.copy(), [child.copy() for child in self.children], self.id
+            width=self.width,
+            data=self.data.copy(),
+            children=[child.copy() for child in self.children],
+            id=self.id,
         )
 
     def all(self):

@@ -1,5 +1,6 @@
 import pygame
 from pygame.locals import *
+from draw import draw_handles, draw_line, draw_line_fast
 from lib.vector import Vector, distance_to_line
 from lib.aadraw import aacircle, aaline
 from animate import make_animations
@@ -154,72 +155,62 @@ class Editor:
                         width=3,
                     )
 
-                # aacircle(
-                #     screen,
-                #     self.animate_color,
-                #     *map(int, self.viewer.world_to_screen(curr)),
-                #     3,
-                # )
-
     def editing_draw(self, screen):
-        for vein in self.tendril.all():
-            if vein.id == self.active and not self.selecting:
-                continue
 
-            if self.tendril.parent_of(self.active) == vein.id:
-                color = self.parent_color
-            else:
-                color = self.alternate_color
+        def choice(idx, hit, miss):
+            return lambda i: hit if i == idx else miss
 
-            for i in range(len(vein) - 1):
-                aaline(
-                    screen,
-                    color,
-                    map(int, self.viewer.world_to_screen(vein[i])),
-                    map(int, self.viewer.world_to_screen(vein[i + 1])),
-                    width=1,
-                )
-
-        if self.selecting:
-            nearest = self.nearest_tendril(self.mouse_posn)
-            if nearest is not None:
-                for i in range(len(nearest) - 1):
-                    aaline(
-                        screen,
-                        self.hover_color,
-                        map(int, self.viewer.world_to_screen(nearest[i])),
-                        map(
-                            int,
-                            self.viewer.world_to_screen(nearest[i + 1]),
-                        ),
-                        width=1,
-                    )
+        surf_128 = pygame.Surface(screen.get_size(), pygame.SRCALPHA)
+        surf_128.set_alpha(64)
 
         if not self.selecting:
-            for i in range(len(self.active_vein()) - 1):
-                aaline(
-                    screen,
-                    (
-                        self.hover_color
-                        if i == self.hovering_line
-                        else self.primary_color
-                    ),
-                    map(int, self.viewer.world_to_screen(self.active_vein()[i])),
-                    map(int, self.viewer.world_to_screen(self.active_vein()[i + 1])),
-                    width=1,
+            for vein in self.tendril.all():
+                points = [self.viewer.world_to_screen(p) for p in vein]
+
+                if vein.id == self.active:
+                    draw_line(
+                        surf_128,
+                        points,
+                        vein.width * self.viewer.zoom_scale(),
+                        self.primary_color,
+                    )
+                else:
+                    draw_line_fast(
+                        surf_128,
+                        points,
+                        vein.width * self.viewer.zoom_scale(),
+                        self.primary_color,
+                    )
+        else:
+            for vein in self.tendril.all():
+                points = [self.viewer.world_to_screen(p) for p in vein]
+                color = (
+                    self.parent_color
+                    if vein == self.nearest_tendril(self.mouse_posn)
+                    else self.alternate_color
                 )
 
-            for i, point in enumerate(self.active_vein()):
-                aacircle(
+                draw_line_fast(
                     screen,
-                    (
-                        self.hover_color
-                        if i == self.hovering_point
-                        else self.primary_color
-                    ),
-                    *map(int, self.viewer.world_to_screen(point)),
-                    3,
+                    points,
+                    vein.width * self.viewer.zoom_scale(),
+                    color,
                 )
+
+        screen.blit(surf_128, (0, 0))
+
+        if not self.selecting:
+            points = [self.viewer.world_to_screen(p) for p in self.active_vein()]
+
+            line_color = choice(
+                self.hovering_line, self.hover_color, self.primary_color
+            )
+            handle_color = choice(
+                self.hovering_point, self.hover_color, self.primary_color
+            )
+
+            draw_line(screen, points, 2, line_color)
+            draw_handles(screen, points, handle_color, 3)
 
     def event(self, event):
         if event.type == KEYDOWN and event.key == K_TAB:
@@ -253,6 +244,14 @@ class Editor:
 
             if event.key == K_z and pygame.key.get_mods() & KMOD_CTRL:
                 self.undo()
+
+            if event.key == K_EQUALS:
+                print("plus")
+                self.active_vein().width += 1
+
+            if event.key == K_MINUS:
+                print("minus")
+                self.active_vein().width -= 1
 
             if event.key == K_n:
                 self.save()

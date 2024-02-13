@@ -121,7 +121,11 @@ def load_vein_legacy(path):
 
 def load_vein(path):
     try:
-        return pickle.load(open(path, "rb"))
+        vein = pickle.load(open(path, "rb"))
+        for t in vein.all():
+            if not hasattr(t, "width"):
+                t.width = 1
+        return vein
     except pickle.UnpicklingError:
         print("Error unpickling, trying to load legacy format")
         return legacy_to_tendril(load_vein_legacy(path))

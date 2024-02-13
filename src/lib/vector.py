@@ -1,3 +1,6 @@
+import math
+
+
 def distance_to_line(a, b, c):
     try:
         m1 = (b.y - a.y) / (b.x - a.x)
@@ -46,6 +49,16 @@ class Vector:
         if Vector.IsVector(a) and Vector.IsVector(b):
             return Vector(*[(v2 - v1) * pct + v1 for v1, v2 in zip(a.values, b.values)])
         return Vector(*[(v2 - v1) * pct + v1 for v1, v2 in zip(a, b)])
+
+    @staticmethod
+    def Angle(a, b):
+        if Vector.IsVector(a) and Vector.IsVector(b):
+            return math.atan2(b.y - a.y, b.x - a.x)
+        return math.atan2(b[1] - a[1], b[0] - a[0])
+
+    @staticmethod
+    def Polar(angle, magnitude):
+        return Vector(magnitude * math.cos(angle), magnitude * math.sin(angle))
 
     @staticmethod
     def IsVector(v):

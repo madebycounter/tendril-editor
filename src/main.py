@@ -1,5 +1,7 @@
 import os
 
+from tendril import Tendril
+
 os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "hide"
 
 
@@ -41,6 +43,9 @@ viewer = ImageViewer(
 
 editor = Editor(
     viewer,
+    tendril=Tendril.load(
+        "A:\\projects\\nava onti\\music videos\\vfx + sfx\\tendrils\\veins\\image1.vein"
+    ),
     hover_range=options.HOVER_RANGE,
     history_size=options.HISTORY_SIZE,
     primary_color=options.PRIMARY_COLOR,
