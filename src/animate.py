@@ -1,3 +1,4 @@
+from random import random
 from lib.vector import Vector
 
 
@@ -82,10 +83,10 @@ def make_animations_iter(tendril, start=0):
     for i in range(len(tendril) - 1):
         curr = tendril[i]
         next = tendril[i + 1]
-        animation[kf] = State(curr, 0, 1, True)
+        animation[kf] = State(curr, 0, tendril.width, True)
         kf += Vector.Distance(curr, next)
 
-    animation[kf] = State(tendril[-1], 0, 1, False)
+    animation[kf] = State(tendril[-1], 0, tendril.width, False)
 
     animations = [(tendril, animation)]
     for child in tendril.children:
@@ -97,7 +98,7 @@ def make_animations_iter(tendril, start=0):
         for i in range(closest_idx):
             curr = tendril[i]
             next = tendril[i + 1]
-            start_offset += Vector.Distance(curr, next)
+            start_offset += Vector.Distance(curr, next) + 1
 
         animations += make_animations_iter(child, start=start + start_offset)
 
