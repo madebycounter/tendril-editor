@@ -1,4 +1,5 @@
 import os
+import sys
 
 from tendril import Tendril
 
@@ -28,7 +29,16 @@ clock = pygame.time.Clock()
 screen = pygame.display.set_mode(size, RESIZABLE, vsync=True)
 pygame.display.set_caption("William's Veiny Tendril Editor")
 
-image = pygame.image.load("sample.png")
+if len(sys.argv) > 1:
+    image = pygame.image.load(sys.argv[1])
+else:
+    image = pygame.image.load("sample.png")
+
+if len(sys.argv) > 2:
+    tendril = Tendril.load(sys.argv[2])
+else:
+    tendril = Tendril()
+
 
 viewer = ImageViewer(
     image,
@@ -43,9 +53,7 @@ viewer = ImageViewer(
 
 editor = Editor(
     viewer,
-    tendril=Tendril.load(
-        "A:\\projects\\nava onti\\music videos\\vfx + sfx\\tendrils\\veins\\image1.vein"
-    ),
+    tendril=tendril,
     hover_range=options.HOVER_RANGE,
     history_size=options.HISTORY_SIZE,
     primary_color=options.PRIMARY_COLOR,
