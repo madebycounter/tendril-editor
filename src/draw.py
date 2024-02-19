@@ -4,75 +4,68 @@ import pygame
 import math
 
 
+def v(src, i):
+    if callable(src):
+        return src(i)
+    else:
+        return src
+
+
 def draw_line(surface, points, width, color):
+    if len(points) < 2:
+        return
+
     for i in range(len(points) - 1):
-        if callable(color):
-            this_color = color(i)
-        else:
-            this_color = color
-
-        if callable(width):
-            this_width = width(i)
-        else:
-            this_width = width
-
         curr = points[i]
         next = points[i + 1]
 
         angle = Vector.Angle(curr, next)
         polygon = [
-            curr + Vector.Polar(angle + math.pi / 2, this_width / 2),
-            curr + Vector.Polar(angle - math.pi / 2, this_width / 2),
-            next + Vector.Polar(angle - math.pi / 2, this_width / 2),
-            next + Vector.Polar(angle + math.pi / 2, this_width / 2),
+            curr + Vector.Polar(angle + math.pi / 2, v(width, i) / 2),
+            curr + Vector.Polar(angle - math.pi / 2, v(width, i) / 2),
+            next + Vector.Polar(angle - math.pi / 2, v(width, i) / 2),
+            next + Vector.Polar(angle + math.pi / 2, v(width, i) / 2),
         ]
 
-        pygame.draw.polygon(surface, this_color, polygon)
+        pygame.draw.polygon(surface, v(color, i), polygon)
 
         pygame.draw.circle(
-            surface, this_color, (int(points[i].x), int(points[i].y)), this_width / 2
+            surface, v(color, i), (int(points[i].x), int(points[i].y)), v(width, i) / 2
         )
 
     pygame.draw.circle(
         surface,
-        this_color,
+        v(color, len(points) - 1),
         (int(points[-1].x), int(points[-1].y)),
-        int(this_width / 2),
+        int(v(width, len(points) - 1) / 2),
     )
 
 
 def draw_line_fast(surface, points, width, color):
+    if len(points) < 2:
+        return
+
     for i in range(len(points) - 1):
-        if callable(color):
-            this_color = color(i)
-        else:
-            this_color = color
-
-        if callable(width):
-            this_width = width(i)
-        else:
-            this_width = width
-
         curr = points[i]
         next = points[i + 1]
 
         pygame.draw.line(
             surface,
-            this_color,
+            v(color, i),
             (int(curr.x), int(curr.y)),
             (int(next.x), int(next.y)),
-            int(this_width),
+            int(v(width, i)),
         )
 
         pygame.draw.circle(
-            surface, this_color, (int(points[i].x), int(points[i].y)), this_width / 2
+            surface, v(color, i), (int(points[i].x), int(points[i].y)), v(width, i) / 2
         )
 
     pygame.draw.circle(
         surface,
-        this_color,
+        v(color, len(points) - 1),
         (int(points[-1].x), int(points[-1].y)),
-        int(this_width / 2),
+        int(v(width, len(points) - 1) / 2),
     )
 
     #     aacircle(
@@ -92,14 +85,4 @@ def draw_line_fast(surface, points, width, color):
 
 def draw_handles(screen, points, color, radius):
     for i, p in enumerate(points):
-        if callable(color):
-            this_color = color(i)
-        else:
-            this_color = color
-
-        if callable(radius):
-            this_radius = radius(i)
-        else:
-            this_radius = radius
-
-        aacircle(screen, this_color, *map(int, p), this_radius)
+        aacircle(screen, v(color, i), *map(int, p), v(radius, i))

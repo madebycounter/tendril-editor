@@ -98,7 +98,7 @@ def make_animations_iter(tendril, start=0):
         for i in range(closest_idx):
             curr = tendril[i]
             next = tendril[i + 1]
-            start_offset += Vector.Distance(curr, next) + 1
+            start_offset += Vector.Distance(curr, next) + 0.2
 
         animations += make_animations_iter(child, start=start + start_offset)
 

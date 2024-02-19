@@ -70,6 +70,14 @@ class Tendril:
 
     def encode(self):
         return pickle.dumps(self)
+    
+    def clean(self):
+        # remove empty children
+        self.children = [child for child in self.children if len(child) > 0]
+        # clean children
+        for child in self.children:
+            child.clean()
+            
 
     def copy(self):
         return Tendril(
@@ -88,4 +96,6 @@ class Tendril:
     @staticmethod
     def load(path):
         with open(path, "rb") as file:
-            return pickle.load(file)
+            t = pickle.load(file)
+            t.clean()
+            return t

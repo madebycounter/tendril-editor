@@ -1,9 +1,9 @@
-import threading
 import pygame
 import numpy as np
 import math
 from lib.aadraw import aacircle
 from options import Options
+from perlin_noise import PerlinNoise
 
 OPTIONS_FILE = "options.cfg"
 options = Options()
@@ -48,14 +48,17 @@ options.load(OPTIONS_FILE)
 
 def render_frames(animations, image, samples=500, frames=500, tail=0.05):
     surface = pygame.Surface(image.get_size())
+    tails = pygame.Surface(image.get_size())
     scale = image.get_height() / options.IMAGE_HEIGHT
+    noise = PerlinNoise(seed=1)
 
-    for frame in range(frames):
-        outfile = f"render/frame{frame:03d}.png"
-        start = frame / frames
+    frame = 0
+    start = 0
+    while start < 1:
+        frame_out = f"render/frames/{frame:03d}.png"
 
-        for time in np.linspace(start - tail, start, math.floor(samples * tail)):
-            ns = pygame.Surface(image.get_size())
+        ns = pygame.Surface(image.get_size())
+        for time in np.linspace(start, start - tail, math.floor(samples * tail)):
             for anim in animations:
                 keyframe = anim[time]
                 intensity = (time - start) / tail * -255
@@ -68,12 +71,19 @@ def render_frames(animations, image, samples=500, frames=500, tail=0.05):
                         int(keyframe.scale / 2 * scale),
                     )
 
-            surface.blit(ns, (0, 0), special_flags=pygame.BLEND_RGB_ADD)
+
+        surface.blit(ns, (0, 0), special_flags=pygame.BLEND_RGB_ADD)
 
         this_frame = surface.copy()
         this_frame.blit(image, (0, 0), special_flags=pygame.BLEND_RGB_MULT)
-        pygame.image.save(this_frame, outfile)
-        print(f"Rendered {outfile} ({round((start + tail) * 100, 2)}%)")
+        pygame.image.save(this_frame, frame_out)
+        print(f"Rendered {frame}.png ({round(start * 100, 2)}%)")
+
+
+        step = (noise(frame / frames) + 1)
+        start += (1 / frames) * step * 1.5
+        frame += 1
+
 
 
 if __name__ == "__main__":
